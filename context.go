@@ -9,17 +9,19 @@ import (
 type H map[string]interface{}
 
 // 框架中请求上下文
-type context struct {
+type Context struct {
 	Writer     http.ResponseWriter
 	Req        *http.Request
 	Path       string
 	Method     string
 	Params     map[string]string
 	StatusCode int
+	handlers   []HandlerFunc
+	index      int
 }
 
-func NewContext(w http.ResponseWriter, req *http.Request) *context {
-	return &context{
+func NewContext(w http.ResponseWriter, req *http.Request) *Context {
+	return &Context{
 		Writer: w,
 		Req:    req,
 		Path:   req.URL.Path,
@@ -28,38 +30,43 @@ func NewContext(w http.ResponseWriter, req *http.Request) *context {
 	}
 }
 
-func (c *context) PostForm(key string) string {
+func (c *Context) Fail(code int, err string) {
+	c.index = len(c.handlers)
+	c.JSON(code, H{"message": err})
+}
+
+func (c *Context) PostForm(key string) string {
 	return c.Req.FormValue(key)
 }
 
-func (c *context) Query(key string) string {
+func (c *Context) Query(key string) string {
 	return c.Req.URL.Query().Get(key)
 }
 
 // 获取路径参数
-func (c *context) Param(key string) string {
+func (c *Context) Param(key string) string {
 	value, _ := c.Params[key]
 	return value
 }
 
-func (c *context) Status(code int) {
+func (c *Context) Status(code int) {
 	c.StatusCode = code
 	c.Writer.WriteHeader(code)
 }
 
-func (c *context) SetHeader(key string, value string) {
+func (c *Context) SetHeader(key string, value string) {
 	c.Writer.Header().Set(key, value)
 }
 
 // String 返回 String 数据
-func (c *context) String(code int, format string, values ...interface{}) {
+func (c *Context) String(code int, format string, values ...interface{}) {
 	c.SetHeader("Content-Type", "text/plain")
 	c.Status(code)
 	c.Writer.Write([]byte(fmt.Sprintf(format, values...)))
 }
 
 // JSON 返回 JSON 数据
-func (c *context) JSON(code int, obj interface{}) {
+func (c *Context) JSON(code int, obj interface{}) {
 	c.SetHeader("Content-Type", "application/json")
 	c.Status(code)
 	encoder := json.NewEncoder(c.Writer)
@@ -69,14 +76,23 @@ func (c *context) JSON(code int, obj interface{}) {
 }
 
 // Data 返回 字节流数据
-func (c *context) Data(code int, data []byte) {
+func (c *Context) Data(code int, data []byte) {
 	c.Status(code)
 	c.Writer.Write(data)
 }
 
 // HTML 返回 HTML 数据
-func (c *context) HTML(code int, html string) {
+func (c *Context) HTML(code int, html string) {
 	c.SetHeader("Content-Type", "text/html")
 	c.Status(code)
 	c.Writer.Write([]byte(html))
+}
+
+// Next 执行下一个中间件函数
+func (c *Context) Next() {
+	c.index++
+	s := len(c.handlers)
+	for ; c.index < s; c.index++ {
+		c.handlers[c.index](c)
+	}
 }

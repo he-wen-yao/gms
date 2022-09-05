@@ -7,6 +7,9 @@ import (
 )
 
 func TestGms(t *testing.T) {
-	g := gms.New()
-	g.Run("")
+	g := gms.NewGms()
+
+	api := g.Group("/test")
+
+	t.Logf("%v", api)
 }
