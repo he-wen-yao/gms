@@ -2,10 +2,9 @@ package gms_test
 
 import (
 	"fmt"
+	"github.com/he-wen-yao/gms"
 	"reflect"
 	"testing"
-
-	"github.com/he-wen-yao/gms"
 )
 
 func newTestRouter() *gms.Router {

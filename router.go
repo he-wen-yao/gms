@@ -22,7 +22,7 @@ func NewRouter() *Router {
 	}
 }
 
-// Only one * is allowed
+// ParsePattern Only one * is allowed
 func ParsePattern(pattern string) []string {
 	vs := strings.Split(pattern, "/")
 	parts := make([]string, 0)
@@ -49,6 +49,7 @@ func (r *Router) AddRoute(method string, pattern string, handler HandlerFunc) {
 	r.handlers[key] = handler
 }
 
+// GetRoute 根据请求方式以及路径获取一个路由
 func (r *Router) GetRoute(method string, path string) (*ds.Node, map[string]string) {
 	searchParts := ParsePattern(path)
 	params := make(map[string]string)
@@ -77,18 +78,8 @@ func (r *Router) GetRoute(method string, path string) (*ds.Node, map[string]stri
 	return nil, nil
 }
 
+// Handle 路由实际处理方法
 func (r *Router) Handle(c *Context) {
-	n, params := r.GetRoute(c.Method, c.Path)
-	if n != nil {
-		c.Params = params
-		key := c.Method + "-" + n.Part
-		r.handlers[key](c)
-	} else {
-		c.String(http.StatusNotFound, "404 NOT FOUND: %s\n", c.Path)
-	}
-}
-
-func (r *Router) handle(c *Context) {
 	n, params := r.GetRoute(c.Method, c.Path)
 	if n != nil {
 		key := c.Method + "-" + n.Pattern

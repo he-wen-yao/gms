@@ -16,6 +16,7 @@ type Gms struct {
 
 // NewGms 返回 Gms 实例
 func NewGms() (g *Gms) {
+	g = &Gms{}
 	g.RouterGroup = RouterGroup{gms: g}
 	g.groups = []*RouterGroup{}
 	return

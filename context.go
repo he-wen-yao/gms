@@ -8,7 +8,7 @@ import (
 
 type H map[string]interface{}
 
-// 框架中请求上下文
+// Context 框架中请求上下文
 type Context struct {
 	Writer     http.ResponseWriter
 	Req        *http.Request
@@ -20,6 +20,7 @@ type Context struct {
 	index      int
 }
 
+// NewContext 初始化一个上下文
 func NewContext(w http.ResponseWriter, req *http.Request) *Context {
 	return &Context{
 		Writer: w,
@@ -43,7 +44,7 @@ func (c *Context) Query(key string) string {
 	return c.Req.URL.Query().Get(key)
 }
 
-// 获取路径参数
+// Param 获取路径参数
 func (c *Context) Param(key string) string {
 	value, _ := c.Params[key]
 	return value
